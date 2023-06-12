@@ -1,0 +1,42 @@
+disable_mlock = true
+pid_file      = "/opt/vault/vault.pid"
+api_addr      = "{{ vault_api_address }}"
+cluster_addr  = "{{ vault_cluster_address }}"
+ui            = true
+
+storage "raft" {
+  path    = "/opt/vault/data"
+  node_id = "{{ inventory_hostname }}"
+{% for node in vault_nodes %}
+  retry_join {
+    leader_tls_servername   = "{{ node }}.home.cylindric.net"
+    leader_api_addr         = "https://{{ node }}.home.cylindric.net:8200"
+    leader_ca_cert_file     = "/opt/vault/tls/ca.crt"
+    leader_client_cert_file = "/opt/vault/tls/tls.crt"
+    leader_client_key_file  = "/opt/vault/tls/tls.key"
+  }
+{% endfor %}
+}
+
+{% if vault_unseal_settings.access_key is defined and vault_unseal_settings.access_key|length %}
+seal "awskms" {
+  access_key  = "{{ vault_unseal_settings.access_key }}"
+  secret_key  = "{{ vault_unseal_settings.access_secret }}"
+  region      = "{{ vault_unseal_settings.region }}"
+  kms_key_id  = "{{ vault_unseal_settings.kms_key_id }}"
+}
+{% endif %}
+
+# HTTPS listener
+listener "tcp" {
+  address                  = "{{ vault_listener.address }}"
+  tls_cert_file            = "{{ vault_listener.tls_cert_file }}"
+  tls_key_file             = "{{ vault_listener.tls_key_file }}"
+  tls_client_ca_file       = "{{ vault_listener.tls_client_ca_file }}"
+  tls_disable_client_certs = {{ "true" if vault_listener.tls_disable_client_certs else "false" }}
+}
+
+telemetry {
+  disable_hostname = true
+  prometheus_retention_time = "12h"
+}

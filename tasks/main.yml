@@ -1,0 +1,58 @@
+---
+- name: Vault | Add repo key
+  ansible.builtin.get_url:
+    url: https://apt.releases.hashicorp.com/gpg
+    dest: /etc/apt/trusted.gpg.d/hashicorp-archive-keyring.asc
+    mode: '0644'
+    force: true
+
+- name: Vault | Add repo
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64] https://apt.releases.hashicorp.com {{ ansible_distribution_release }} main"
+    state: present
+    update_cache: yes
+
+- name: Vault | Install vault
+  ansible.builtin.apt:
+    state: present
+    name:
+    - vault
+
+- name: Vault | Configure sudoers
+  ansible.builtin.copy:
+    dest: /etc/sudoers.d/11_homelab_vault
+    content: |
+      vault ALL=(root) NOPASSWD: /usr/bin/systemctl reload vault.service
+      vault ALL=(root) NOPASSWD: /usr/bin/systemctl reload vault   
+    owner: root
+    group: root
+    mode: '0440'
+    validate: /usr/sbin/visudo -cf %s
+
+- name: Vault | Create log path
+  ansible.builtin.file:
+    path: /var/log/vault
+    state: directory
+    owner: vault
+    group: vault
+    mode: 0700
+
+- name: Vault | LogRotate
+  ansible.builtin.template:
+    src: vault.logrotate
+    dest: /etc/logrotate.d/vault
+
+- name: Vault | Vault Config
+  ansible.builtin.template:
+    src: vault.hcl.j2
+    dest: /etc/vault.d/vault.hcl
+    owner: vault
+    group: vault
+    mode: '0600'
+  notify: Restart Vault Server
+
+- name: Vault | Service
+  ansible.builtin.service:
+    name: vault
+    state: started
+    enabled: yes

@@ -1,0 +1,19 @@
+---
+vault_server: https://vault:8200
+vault_app_role: workspace-approle
+vault_source_url: https://releases.hashicorp.com/vault/1.12.3/vault_1.12.3_linux_amd64.zip
+vault_source_checksum: sha256:f4825bad06e77687b407eff7423acb9238adfd545d7345f2a0bb9e81b0c4b1eb
+
+vault_api_address: "https://{{inventory_hostname}}.home.cylindric.net:8200"
+vault_cluster_address: "https://{{inventory_hostname}}.home.cylindric.net:8201"
+vault_unseal_settings:
+  access_key: ""
+  secret_key: ""
+  region: ""
+  kms_key_id: ""
+vault_listener:
+  address: "0.0.0.0:8200"
+  tls_cert_file: "/opt/vault/tls/tls.crt"
+  tls_key_file: "/opt/vault/tls/tls.key"
+  tls_client_ca_file: ""
+  tls_disable_client_certs: true

@@ -1,0 +1,16 @@
+/var/log/vault/audit.log {
+    size 100M
+    maxsize 100M
+    rotate 10
+    create 0660 vault vault
+    copytruncate
+    compress
+    delaycompress
+    ifempty
+    dateext
+    dataformat -%Y%m%d-%s
+    missingok
+    postrotate
+        /usr/bin/systemctl reload vault 2> /dev/null || true
+    endscript
+}
