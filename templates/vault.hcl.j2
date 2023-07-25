@@ -4,6 +4,7 @@ api_addr      = "{{ vault_api_address }}"
 cluster_addr  = "{{ vault_cluster_address }}"
 ui            = true
 
+{% if vault_storage_type ==  'raft' %}
 storage "raft" {
   path    = "/opt/vault/data"
   node_id = "{{ inventory_hostname }}"
@@ -17,6 +18,13 @@ storage "raft" {
   }
 {% endfor %}
 }
+{% endif %}
+
+{% if vault_storage_type == 'file' %}
+storage "file" {
+  path = "/opt/vault/data"
+}
+{% endif %}
 
 {% if vault_unseal_settings.access_key is defined and vault_unseal_settings.access_key|length %}
 seal "awskms" {
